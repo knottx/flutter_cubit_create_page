@@ -1,0 +1,50 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build Web",
+      "group": "build",
+      "type": "shell",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Flutter: flutter build web",
+        "Copy build/web to docs"
+      ]
+    },
+    {
+      "label": "Flutter: flutter build web",
+      "group": "build",
+      "type": "flutter",
+      "command": "flutter",
+      "args": ["build", "web", "-t", "lib/main.dart",]
+    },
+    {
+      "label": "Copy build/web to docs",
+      "group": "none",
+      "type": "shell",
+      "command": "cp",
+      "args": ["-a", "build/web/.", "docs",]
+    },
+
+    {
+      "label": "Flutter: flutter pub run build_runner clean",
+      "group": "build",
+      "type": "flutter",
+      "command": "flutter",
+      "args": ["pub", "run", "build_runner", "clean"]
+    },
+    {
+      "label": "Flutter: flutter pub run build_runner build",
+      "group": "build",
+      "type": "flutter",
+      "command": "flutter",
+      "args": [
+        "pub",
+        "run",
+        "build_runner",
+        "build",
+        "--delete-conflicting-outputs"
+      ]
+    },
+  ]
+}

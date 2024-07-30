@@ -1,0 +1,335 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_cubit_create_page/cubit/home_page_cubit.dart';
+import 'package:flutter_cubit_create_page/cubit/home_page_state.dart';
+import 'package:recase/recase.dart';
+import 'package:syntax_highlight/syntax_highlight.dart';
+
+class HomePage extends StatelessWidget {
+  final Highlighter highlighter;
+
+  const HomePage({
+    super.key,
+    required this.highlighter,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => HomePageCubit(),
+      child: HomeView(
+        highlighter: highlighter,
+      ),
+    );
+  }
+}
+
+class HomeView extends StatefulWidget {
+  final Highlighter highlighter;
+  const HomeView({
+    super.key,
+    required this.highlighter,
+  });
+
+  @override
+  State<HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<HomeView> {
+  final ScrollController _scrollController = ScrollController();
+  final TextEditingController _nameTextEditingController =
+      TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _nameTextEditingController.addListener(() {
+      final name = _nameTextEditingController.text;
+      context.read<HomePageCubit>().setName(name);
+    });
+    _nameTextEditingController.text = 'Home';
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _nameTextEditingController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<HomePageCubit, HomePageState>(
+      builder: (context, state) {
+        return GestureDetector(
+          onTap: () {
+            FocusScope.of(context).unfocus();
+          },
+          child: Scaffold(
+            body: Scrollbar(
+              controller: _scrollController,
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                padding: const EdgeInsets.all(16),
+                child: SafeArea(
+                  child: Center(
+                    child: Container(
+                      constraints: const BoxConstraints(maxWidth: 600),
+                      child: _body(state),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _body(HomePageState state) {
+    final namePascalCase = state.name.pascalCase;
+    final nameSnakeCase = state.name.snakeCase;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _nameField(),
+        const SizedBox(height: 16),
+        _code(
+          fileName: '${nameSnakeCase}_page_state.dart',
+          code: '''
+import 'package:equatable/equatable.dart';
+
+enum ${namePascalCase}PageStatus {
+  initial,
+  loading,
+  ready,
+  failure,
+  ;
+
+  bool get isLoading => this == ${namePascalCase}PageStatus.loading;
+}
+
+class ${namePascalCase}PageState extends Equatable {
+  final ${namePascalCase}PageStatus status;
+  final Object? error;
+
+  const ${namePascalCase}PageState({
+    this.status = ${namePascalCase}PageStatus.initial,
+    this.error,
+  });
+
+  @override
+  List<Object?> get props => [
+        status,
+        error,
+      ];
+
+  ${namePascalCase}PageState copyWith({
+    ${namePascalCase}PageStatus? status,
+    Object? error,
+  }) {
+    return ${namePascalCase}PageState(
+      status: status ?? this.status,
+      error: error ?? this.error,
+    );
+  }
+
+  ${namePascalCase}PageState loading() {
+    return copyWith(
+      status: ${namePascalCase}PageStatus.loading,
+    );
+  }
+
+  ${namePascalCase}PageState ready() {
+    return copyWith(
+      status: ${namePascalCase}PageStatus.ready,
+    );
+  }
+
+  ${namePascalCase}PageState failure(
+    Object error,
+  ) {
+    return copyWith(
+      status: ${namePascalCase}PageStatus.failure,
+      error: error,
+    );
+  }
+}
+''',
+        ),
+        const SizedBox(height: 16),
+        _code(
+          fileName: '${nameSnakeCase}_page_cubit.dart',
+          code: '''
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '${nameSnakeCase}_page_state.dart';
+
+class ${namePascalCase}PageCubit extends Cubit<${namePascalCase}PageState> {
+  ${namePascalCase}PageCubit() : super(const ${namePascalCase}PageState());
+}
+''',
+        ),
+        const SizedBox(height: 16),
+        _code(
+          fileName: '${state.name.snakeCase}.dart',
+          code: '''
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'cubit/${nameSnakeCase}_page_cubit.dart';
+import 'cubit/${nameSnakeCase}_page_state.dart';
+
+class ${namePascalCase}Page extends StatelessWidget {
+  const ${namePascalCase}Page({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => ${namePascalCase}PageCubit(),
+      child: const ${namePascalCase}View(),
+    );
+  }
+}
+
+class ${namePascalCase}View extends StatefulWidget {
+  const ${namePascalCase}View({super.key});
+
+  @override
+  State<${namePascalCase}View> createState() => _${namePascalCase}ViewState();
+}
+
+class _${namePascalCase}ViewState extends State<${namePascalCase}View> {
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<${namePascalCase}PageCubit, ${namePascalCase}PageState>(
+      builder: (context, state) {
+        return const Scaffold(
+          body: Center(
+            child: Text('$namePascalCase'),
+          ),
+        );
+      },
+      listener: _listener,
+    );
+  }
+
+  void _listener(BuildContext context, ${namePascalCase}PageState state) {
+    switch (state.status) {
+      case ${namePascalCase}PageStatus.initial:
+      case ${namePascalCase}PageStatus.loading:
+      case ${namePascalCase}PageStatus.ready:
+        break;
+
+      case ${namePascalCase}PageStatus.failure:
+        break;
+    }
+  }
+}
+''',
+        ),
+      ],
+    );
+  }
+
+  Widget _nameField() {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        color: Theme.of(context).colorScheme.surfaceContainerLowest,
+      ),
+      padding: const EdgeInsets.all(16),
+      child: TextField(
+        controller: _nameTextEditingController,
+        style: Theme.of(context).textTheme.bodyMedium,
+        maxLines: 1,
+        decoration: InputDecoration(
+          labelText: 'Name',
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(
+              width: 1,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _code({
+    required String fileName,
+    required String code,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        color: Theme.of(context).colorScheme.surfaceContainerLowest,
+      ),
+      padding: const EdgeInsets.all(8),
+      child: SelectionArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              fileName,
+              textAlign: TextAlign.left,
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(4),
+                color: Colors.black,
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text.rich(
+                      widget.highlighter.highlight(code),
+                    ),
+                  ),
+                  IconButton.filledTonal(
+                    onPressed: () {
+                      _onTapCopy(code);
+                    },
+                    icon: const Icon(
+                      Icons.copy,
+                      size: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _onTapCopy(
+    String data,
+  ) {
+    Clipboard.setData(
+      ClipboardData(text: data),
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.check_circle,
+              color: Colors.green,
+            ),
+            SizedBox(width: 8),
+            Text('Copied!'),
+          ],
+        ),
+      ),
+    );
+  }
+}
