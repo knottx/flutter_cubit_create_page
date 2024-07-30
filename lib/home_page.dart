@@ -174,7 +174,7 @@ class ${namePascalCase}PageCubit extends Cubit<${namePascalCase}PageState> {
         ),
         const SizedBox(height: 16),
         _code(
-          fileName: '${state.name.snakeCase}.dart',
+          fileName: '${state.name.snakeCase}_page.dart',
           code: '''
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -267,7 +267,7 @@ class _${namePascalCase}ViewState extends State<${namePascalCase}View> {
         borderRadius: BorderRadius.circular(8),
         color: Theme.of(context).colorScheme.surfaceContainerLowest,
       ),
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(16),
       child: SelectionArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
