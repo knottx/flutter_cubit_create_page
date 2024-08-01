@@ -75,7 +75,9 @@ class _HomeViewState extends State<HomeView> {
                 child: SafeArea(
                   child: Center(
                     child: Container(
-                      constraints: const BoxConstraints(maxWidth: 600),
+                      constraints: const BoxConstraints(
+                        maxWidth: 600,
+                      ),
                       child: _body(state),
                     ),
                   ),
@@ -211,7 +213,7 @@ class _${namePascalCase}ViewState extends State<${namePascalCase}View> {
           appBar: AppBar(
             title: const Text('$nameTitleCase'),
           ),
-          body: Center(
+          body: const Center(
             child: Text('$nameTitleCase'),
           ),
         );
