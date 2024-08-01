@@ -89,6 +89,7 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Widget _body(HomePageState state) {
+    final nameTitleCase = state.name.titleCase;
     final namePascalCase = state.name.pascalCase;
     final nameSnakeCase = state.name.snakeCase;
     return Column(
@@ -206,9 +207,12 @@ class _${namePascalCase}ViewState extends State<${namePascalCase}View> {
   Widget build(BuildContext context) {
     return BlocConsumer<${namePascalCase}PageCubit, ${namePascalCase}PageState>(
       builder: (context, state) {
-        return const Scaffold(
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('$nameTitleCase'),
+          ),
           body: Center(
-            child: Text('$namePascalCase'),
+            child: Text('$nameTitleCase'),
           ),
         );
       },
@@ -243,7 +247,9 @@ class _${namePascalCase}ViewState extends State<${namePascalCase}View> {
       padding: const EdgeInsets.all(16),
       child: TextField(
         controller: _nameTextEditingController,
-        style: Theme.of(context).textTheme.bodyMedium,
+        style: const TextStyle(
+          fontFamily: 'Consolas',
+        ),
         maxLines: 1,
         decoration: InputDecoration(
           labelText: 'Name',
@@ -274,6 +280,9 @@ class _${namePascalCase}ViewState extends State<${namePascalCase}View> {
           children: [
             Text(
               fileName,
+              style: const TextStyle(
+                fontFamily: 'Consolas',
+              ),
               textAlign: TextAlign.left,
             ),
             const SizedBox(height: 8),
@@ -289,6 +298,9 @@ class _${namePascalCase}ViewState extends State<${namePascalCase}View> {
                   Expanded(
                     child: Text.rich(
                       widget.highlighter.highlight(code),
+                      style: const TextStyle(
+                        fontFamily: 'Consolas',
+                      ),
                     ),
                   ),
                   IconButton.filledTonal(
