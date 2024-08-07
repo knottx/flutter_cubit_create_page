@@ -212,6 +212,7 @@ class _${namePascalCase}ViewState extends State<${namePascalCase}View> {
         return Scaffold(
           appBar: AppBar(
             title: const Text('$nameTitleCase'),
+            centerTitle: true,
           ),
           body: const Center(
             child: Text('$nameTitleCase'),
