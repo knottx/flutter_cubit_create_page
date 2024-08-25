@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_cubit_create_page/cubit/home_page_cubit.dart';
 import 'package:flutter_cubit_create_page/cubit/home_page_state.dart';
+import 'package:flutter_cubit_create_page/session/session_cubit.dart';
+import 'package:flutter_cubit_create_page/session/session_state.dart';
 import 'package:recase/recase.dart';
 import 'package:syntax_highlight/syntax_highlight.dart';
 
@@ -27,6 +29,7 @@ class HomePage extends StatelessWidget {
 
 class HomeView extends StatefulWidget {
   final Highlighter highlighter;
+
   const HomeView({
     super.key,
     required this.highlighter,
@@ -38,6 +41,10 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   final ScrollController _scrollController = ScrollController();
+  final ScrollController _stateScrollController = ScrollController();
+  final ScrollController _cubitScrollController = ScrollController();
+  final ScrollController _pageScrollController = ScrollController();
+
   final TextEditingController _nameTextEditingController =
       TextEditingController();
 
@@ -54,6 +61,9 @@ class _HomeViewState extends State<HomeView> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _stateScrollController.dispose();
+    _cubitScrollController.dispose();
+    _pageScrollController.dispose();
     _nameTextEditingController.dispose();
     super.dispose();
   }
@@ -62,45 +72,57 @@ class _HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     return BlocBuilder<HomePageCubit, HomePageState>(
       builder: (context, state) {
-        return GestureDetector(
-          onTap: () {
-            FocusScope.of(context).unfocus();
-          },
-          child: Scaffold(
-            body: Scrollbar(
-              controller: _scrollController,
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                padding: const EdgeInsets.all(16),
-                child: SafeArea(
-                  child: Center(
-                    child: Container(
-                      constraints: const BoxConstraints(
-                        maxWidth: 600,
+        return BlocBuilder<SessionCubit, SessionState>(
+          builder: (context, sessionState) {
+            return GestureDetector(
+              onTap: () {
+                FocusScope.of(context).unfocus();
+              },
+              child: Scaffold(
+                body: Scrollbar(
+                  controller: _scrollController,
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(16),
+                    child: SafeArea(
+                      child: Center(
+                        child: Container(
+                          constraints: const BoxConstraints(
+                            maxWidth: 600,
+                          ),
+                          child: _body(
+                            state,
+                            sessionState,
+                          ),
+                        ),
                       ),
-                      child: _body(state),
                     ),
                   ),
                 ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
   }
 
-  Widget _body(HomePageState state) {
+  Widget _body(
+    HomePageState state,
+    SessionState sessionState,
+  ) {
     final nameTitleCase = state.name.titleCase;
     final namePascalCase = state.name.pascalCase;
     final nameSnakeCase = state.name.snakeCase;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _nameField(),
+        _nameField(sessionState),
         const SizedBox(height: 16),
         _code(
+          controller: _stateScrollController,
           fileName: '${nameSnakeCase}_page_state.dart',
+          themeMode: sessionState.themeMode,
           code: '''
 import 'package:equatable/equatable.dart';
 
@@ -164,7 +186,9 @@ class ${namePascalCase}PageState extends Equatable {
         ),
         const SizedBox(height: 16),
         _code(
+          controller: _cubitScrollController,
           fileName: '${nameSnakeCase}_page_cubit.dart',
+          themeMode: sessionState.themeMode,
           code: '''
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -177,6 +201,8 @@ class ${namePascalCase}PageCubit extends Cubit<${namePascalCase}PageState> {
         ),
         const SizedBox(height: 16),
         _code(
+          controller: _pageScrollController,
+          themeMode: sessionState.themeMode,
           fileName: '${state.name.snakeCase}_page.dart',
           code: '''
 import 'package:flutter/material.dart';
@@ -241,84 +267,123 @@ class _${namePascalCase}ViewState extends State<${namePascalCase}View> {
     );
   }
 
-  Widget _nameField() {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        color: Theme.of(context).colorScheme.surfaceContainerLowest,
-      ),
-      padding: const EdgeInsets.all(16),
-      child: TextField(
-        controller: _nameTextEditingController,
-        style: const TextStyle(
-          fontFamily: 'Consolas',
-        ),
-        maxLines: 1,
-        decoration: InputDecoration(
-          labelText: 'Name',
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(
-              width: 1,
+  Widget _nameField(SessionState sessionState) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _nameTextEditingController,
+                style: const TextStyle(
+                  fontFamily: 'Consolas',
+                ),
+                maxLines: 1,
+                decoration: InputDecoration(
+                  labelText: 'Name',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(
+                      width: 1,
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ),
+            const SizedBox(width: 16),
+            IconButton(
+              onPressed: () {
+                final sessionCubit = context.read<SessionCubit>();
+                sessionCubit.setThemeMode(
+                  sessionState.themeMode == ThemeMode.light
+                      ? ThemeMode.dark
+                      : ThemeMode.light,
+                );
+              },
+              tooltip: sessionState.themeMode == ThemeMode.dark
+                  ? 'Switch to light mode'
+                  : 'Switch to dark mode',
+              icon: sessionState.themeMode == ThemeMode.dark
+                  ? const Icon(
+                      Icons.sunny,
+                    )
+                  : const Icon(
+                      Icons.nightlight_round,
+                    ),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _code({
+    required ScrollController controller,
     required String fileName,
     required String code,
+    required ThemeMode themeMode,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        color: Theme.of(context).colorScheme.surfaceContainerLowest,
-      ),
-      padding: const EdgeInsets.all(16),
-      child: SelectionArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              fileName,
-              style: const TextStyle(
-                fontFamily: 'Consolas',
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: SelectionArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                fileName,
+                style: const TextStyle(
+                  fontFamily: 'Consolas',
+                ),
+                textAlign: TextAlign.left,
               ),
-              textAlign: TextAlign.left,
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(4),
-                color: Colors.black,
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text.rich(
-                      widget.highlighter.highlight(code),
-                      style: const TextStyle(
-                        fontFamily: 'Consolas',
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(4),
+                  color:
+                      themeMode == ThemeMode.dark ? Colors.black : Colors.white,
+                ),
+                child: IntrinsicHeight(
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Container(
+                        constraints: const BoxConstraints(maxHeight: 300),
+                        child: Scrollbar(
+                          controller: controller,
+                          child: SingleChildScrollView(
+                            controller: controller,
+                            child: Text.rich(
+                              widget.highlighter.highlight(code),
+                              style: const TextStyle(
+                                fontFamily: 'Consolas',
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        child: IconButton.filledTonal(
+                          onPressed: () {
+                            _onTapCopy(code);
+                          },
+                          icon: const Icon(
+                            Icons.copy,
+                            size: 16,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  IconButton.filledTonal(
-                    onPressed: () {
-                      _onTapCopy(code);
-                    },
-                    icon: const Icon(
-                      Icons.copy,
-                      size: 16,
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
