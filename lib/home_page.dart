@@ -3,8 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_cubit_create_page/cubit/home_page_cubit.dart';
 import 'package:flutter_cubit_create_page/cubit/home_page_state.dart';
-import 'package:flutter_cubit_create_page/session/session_cubit.dart';
-import 'package:flutter_cubit_create_page/session/session_state.dart';
 import 'package:recase/recase.dart';
 import 'package:syntax_highlight/syntax_highlight.dart';
 
@@ -72,36 +70,29 @@ class _HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     return BlocBuilder<HomePageCubit, HomePageState>(
       builder: (context, state) {
-        return BlocBuilder<SessionCubit, SessionState>(
-          builder: (context, sessionState) {
-            return GestureDetector(
-              onTap: () {
-                FocusScope.of(context).unfocus();
-              },
-              child: Scaffold(
-                body: Scrollbar(
-                  controller: _scrollController,
-                  child: SingleChildScrollView(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(16),
-                    child: SafeArea(
-                      child: Center(
-                        child: Container(
-                          constraints: const BoxConstraints(
-                            maxWidth: 600,
-                          ),
-                          child: _body(
-                            state,
-                            sessionState,
-                          ),
-                        ),
+        return GestureDetector(
+          onTap: () {
+            FocusScope.of(context).unfocus();
+          },
+          child: Scaffold(
+            body: Scrollbar(
+              controller: _scrollController,
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                padding: const EdgeInsets.all(16),
+                child: SafeArea(
+                  child: Center(
+                    child: Container(
+                      constraints: const BoxConstraints(
+                        maxWidth: 600,
                       ),
+                      child: _body(state),
                     ),
                   ),
                 ),
               ),
-            );
-          },
+            ),
+          ),
         );
       },
     );
@@ -109,7 +100,6 @@ class _HomeViewState extends State<HomeView> {
 
   Widget _body(
     HomePageState state,
-    SessionState sessionState,
   ) {
     final nameTitleCase = state.name.titleCase;
     final namePascalCase = state.name.pascalCase;
@@ -117,12 +107,11 @@ class _HomeViewState extends State<HomeView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _nameField(sessionState),
+        _nameField(),
         const SizedBox(height: 16),
         _code(
           controller: _stateScrollController,
           fileName: '${nameSnakeCase}_page_state.dart',
-          themeMode: sessionState.themeMode,
           code: '''
 import 'package:equatable/equatable.dart';
 
@@ -188,7 +177,6 @@ class ${namePascalCase}PageState extends Equatable {
         _code(
           controller: _cubitScrollController,
           fileName: '${nameSnakeCase}_page_cubit.dart',
-          themeMode: sessionState.themeMode,
           code: '''
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -202,7 +190,6 @@ class ${namePascalCase}PageCubit extends Cubit<${namePascalCase}PageState> {
         const SizedBox(height: 16),
         _code(
           controller: _pageScrollController,
-          themeMode: sessionState.themeMode,
           fileName: '${state.name.snakeCase}_page.dart',
           code: '''
 import 'package:flutter/material.dart';
@@ -267,52 +254,25 @@ class _${namePascalCase}ViewState extends State<${namePascalCase}View> {
     );
   }
 
-  Widget _nameField(SessionState sessionState) {
+  Widget _nameField() {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _nameTextEditingController,
-                style: const TextStyle(
-                  fontFamily: 'Consolas',
-                ),
-                maxLines: 1,
-                decoration: InputDecoration(
-                  labelText: 'Name',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(
-                      width: 1,
-                    ),
-                  ),
-                ),
+        child: TextField(
+          controller: _nameTextEditingController,
+          style: const TextStyle(
+            fontFamily: 'Consolas',
+          ),
+          maxLines: 1,
+          decoration: InputDecoration(
+            labelText: 'Name',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(
+                width: 1,
               ),
             ),
-            const SizedBox(width: 16),
-            IconButton(
-              onPressed: () {
-                final sessionCubit = context.read<SessionCubit>();
-                sessionCubit.setThemeMode(
-                  sessionState.themeMode == ThemeMode.light
-                      ? ThemeMode.dark
-                      : ThemeMode.light,
-                );
-              },
-              tooltip: sessionState.themeMode == ThemeMode.dark
-                  ? 'Switch to light mode'
-                  : 'Switch to dark mode',
-              icon: sessionState.themeMode == ThemeMode.dark
-                  ? const Icon(
-                      Icons.sunny,
-                    )
-                  : const Icon(
-                      Icons.nightlight_round,
-                    ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -322,7 +282,6 @@ class _${namePascalCase}ViewState extends State<${namePascalCase}View> {
     required ScrollController controller,
     required String fileName,
     required String code,
-    required ThemeMode themeMode,
   }) {
     return Card(
       child: Padding(
@@ -343,8 +302,7 @@ class _${namePascalCase}ViewState extends State<${namePascalCase}View> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(4),
-                  color:
-                      themeMode == ThemeMode.dark ? Colors.black : Colors.white,
+                  color: Colors.black,
                 ),
                 child: IntrinsicHeight(
                   child: Stack(
